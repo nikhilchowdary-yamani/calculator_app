@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 void main() {
   runApp(CalculatorApp());
@@ -23,7 +24,19 @@ class _CalculatorHomeState extends State<CalculatorHome> {
 
   void buttonPressed(String value) {
     setState(() {
-      display += value;
+      if (value == '=') {
+        try {
+          Parser p = Parser();
+          Expression exp = p.parse(display);
+          ContextModel cm = ContextModel();
+          double eval = exp.evaluate(EvaluationType.REAL, cm);
+          display = eval.toString();
+        } catch (e) {
+          display = 'Error';
+        }
+      } else {
+        display += value;
+      }
     });
   }
 
@@ -50,7 +63,7 @@ class _CalculatorHomeState extends State<CalculatorHome> {
                 display,
                 style: TextStyle(
                   fontSize: 48,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               ),
             ),
