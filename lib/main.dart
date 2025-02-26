@@ -34,6 +34,16 @@ class _CalculatorHomeState extends State<CalculatorHome> {
         } catch (e) {
           display = 'Error';
         }
+      } else if (value == '.') {
+        if (!display.contains('.')) {
+          display += value;
+        }else {
+          if (display.isNotEmpty && "+-*/".contains(display[display.length-1])){
+            display += value;
+          } else if(display.isNotEmpty && !display.substring(display.lastIndexOf(RegExp(r'[+\-*/]'))+1).contains('.')) {
+            display += value;
+          }
+        }
       } else {
         display += value;
       }
@@ -100,7 +110,8 @@ class _CalculatorHomeState extends State<CalculatorHome> {
     '7', '8', '9', '/',
     '4', '5', '6', '*',
     '1', '2', '3', '-',
-    'C', '0', '=', '+',
+    'C', '0', '.', '+',
+    '=',
   ];
 }
 
