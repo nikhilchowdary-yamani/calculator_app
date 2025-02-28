@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:math_expressions/math_expressions.dart';
 
 void main() {
   runApp(CalculatorApp());
@@ -21,38 +20,97 @@ class CalculatorHome extends StatefulWidget {
 
 class _CalculatorHomeState extends State<CalculatorHome> {
   String display = '';
+  String? operator;
+  double? firstOperand;
 
   void buttonPressed(String value) {
     setState(() {
-      if (value == '=') {
-        try {
-          Parser p = Parser();
-          Expression exp = p.parse(display);
-          ContextModel cm = ContextModel();
-          double eval = exp.evaluate(EvaluationType.REAL, cm);
-          display = eval.toString();
-        } catch (e) {
-          display = 'Error';
-        }
+      if (value == 'C') {
+        clearDisplay();
+      } else if (value == '=') {
+        calculateResult();
+      } else if ("+-*/".contains(value)) {
+        handleOperator(value);
       } else if (value == '.') {
-        if (!display.contains('.')) {
-          display += value;
-        }else {
-          if (display.isNotEmpty && "+-*/".contains(display[display.length-1])){
-            display += value;
-          } else if(display.isNotEmpty && !display.substring(display.lastIndexOf(RegExp(r'[+\-*/]'))+1).contains('.')) {
-            display += value;
-          }
-        }
+        handleDecimal();
+      } else if (value == 'DEL') {
+        deleteChar();
       } else {
         display += value;
       }
     });
   }
 
+  void handleOperator(String op) {
+    if (firstOperand == null) {
+      firstOperand = double.tryParse(display);
+      if (firstOperand != null) {
+        operator = op;
+        display += op;
+      }
+    } else {
+      calculateResult();
+      operator = op;
+      display += op;
+    }
+  }
+
+  void handleDecimal() {
+    if (!display.contains('.')) {
+      display += '.';
+    } else if (display.isNotEmpty && "+-*/".contains(display[display.length - 1])) {
+      display += '.';
+    } else if (display.isNotEmpty &&
+        (operator != null &&
+            display.substring(display.lastIndexOf(RegExp(r'[+\-*/]')) + 1).contains('.') == false)) {
+      display += '.';
+    }
+  }
+
+  void calculateResult() {
+    if (firstOperand != null && operator != null && display.isNotEmpty) {
+      String secondOperandStr = display.substring(display.lastIndexOf(operator!) + 1);
+
+      double secondOperand = double.tryParse(secondOperandStr) ?? 0;
+      double result = 0;
+      switch (operator) {
+        case '+':
+          result = firstOperand! + secondOperand;
+          break;
+        case '-':
+          result = firstOperand! - secondOperand;
+          break;
+        case '*':
+          result = firstOperand! * secondOperand;
+          break;
+        case '/':
+          if (secondOperand != 0) {
+            result = firstOperand! / secondOperand;
+          } else {
+            display = 'Error';
+            return;
+          }
+          break;
+      }
+      display = result.toString();
+      firstOperand = result;
+      operator = null;
+    }
+  }
+
   void clearDisplay() {
     setState(() {
       display = '';
+      operator = null;
+      firstOperand = null;
+    });
+  }
+
+  void deleteChar() {
+    setState(() {
+      if (display.isNotEmpty) {
+        display = display.substring(0, display.length - 1);
+      }
     });
   }
 
@@ -64,7 +122,6 @@ class _CalculatorHomeState extends State<CalculatorHome> {
       ),
       body: Column(
         children: <Widget>[
-          // Display Area
           Expanded(
             child: Container(
               padding: EdgeInsets.all(20),
@@ -78,7 +135,6 @@ class _CalculatorHomeState extends State<CalculatorHome> {
               ),
             ),
           ),
-          // Buttons Grid
           Container(
             child: GridView.builder(
               shrinkWrap: true,
@@ -91,11 +147,7 @@ class _CalculatorHomeState extends State<CalculatorHome> {
                 return CalculatorButton(
                   text: buttons[index],
                   onPressed: () {
-                    if (buttons[index] == 'C') {
-                      clearDisplay();
-                    } else {
-                      buttonPressed(buttons[index]);
-                    }
+                    buttonPressed(buttons[index]);
                   },
                 );
               },
@@ -111,7 +163,7 @@ class _CalculatorHomeState extends State<CalculatorHome> {
     '4', '5', '6', '*',
     '1', '2', '3', '-',
     'C', '0', '.', '+',
-    '=',
+    '=', 'DEL',
   ];
 }
 
